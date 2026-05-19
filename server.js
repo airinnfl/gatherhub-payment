@@ -2,31 +2,34 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const midtransClient = require("midtrans-client");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Health check
+// Test route
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
 
 app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
+  res.json({
+    status: "ok",
+    hasKey: !!process.env.MIDTRANS_SERVER_KEY,
+  });
 });
 
-// Create Midtrans instance
-const snap = new midtransClient.Snap({
-  isProduction: false,
-  serverKey: process.env.MIDTRANS_SERVER_KEY,
-});
-
-// Create transaction
+// Midtrans route
 app.post("/create-transaction", async (req, res) => {
   try {
+    const midtransClient = require("midtrans-client");
+
+    const snap = new midtransClient.Snap({
+      isProduction: false,
+      serverKey: process.env.MIDTRANS_SERVER_KEY,
+    });
+
     const { eventName, price } = req.body;
 
     const amount = Math.max(Number(price) || 0, 1000);
@@ -54,7 +57,6 @@ app.post("/create-transaction", async (req, res) => {
     });
   } catch (error) {
     console.error("Midtrans Error:", error);
-
     res.status(500).json({
       error: error.message,
     });
