@@ -9,32 +9,25 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Cek apakah Server Key tersedia
-if (!process.env.MIDTRANS_SERVER_KEY) {
-  console.error("MIDTRANS_SERVER_KEY is not set!");
-  process.exit(1);
-}
-
-const snap = new midtransClient.Snap({
-  isProduction: false,
-  serverKey: process.env.MIDTRANS_SERVER_KEY,
+// Health check
+app.get("/", (req, res) => {
+  res.send("Backend is running!");
 });
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// Test route
-app.get("/", (req, res) => {
-  res.send("GatherHub Midtrans Backend is running!");
+// Create Midtrans instance
+const snap = new midtransClient.Snap({
+  isProduction: false,
+  serverKey: process.env.MIDTRANS_SERVER_KEY,
 });
 
-// Create transaction route
+// Create transaction
 app.post("/create-transaction", async (req, res) => {
   try {
     const { eventName, price } = req.body;
-
-    console.log("Request body:", req.body);
 
     const amount = Math.max(Number(price) || 0, 1000);
 
@@ -53,8 +46,6 @@ app.post("/create-transaction", async (req, res) => {
       ],
     };
 
-    console.log("Midtrans parameter:", parameter);
-
     const transaction = await snap.createTransaction(parameter);
 
     res.json({
@@ -66,12 +57,10 @@ app.post("/create-transaction", async (req, res) => {
 
     res.status(500).json({
       error: error.message,
-      details: error.ApiResponse || null,
     });
   }
 });
 
-// Railway wajib pakai PORT dari environment
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, "0.0.0.0", () => {
