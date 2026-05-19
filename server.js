@@ -70,12 +70,10 @@ app.post("/create-transaction", async (req, res) => {
   }
 });
 
-// Optional: test endpoint
 app.get("/", (req, res) => {
   res.send("GatherHub Midtrans Backend is running!");
 });
 
-// WAJIB gunakan PORT dari Railway
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
