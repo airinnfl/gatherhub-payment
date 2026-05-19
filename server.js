@@ -70,11 +70,11 @@ app.post("/create-transaction", async (req, res) => {
   }
 });
 
+const PORT = process.env.PORT || 3000;
+
 app.get("/", (req, res) => {
   res.send("GatherHub Midtrans Backend is running!");
 });
-
-const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
