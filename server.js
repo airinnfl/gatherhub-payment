@@ -20,6 +20,10 @@ const snap = new midtransClient.Snap({
   serverKey: process.env.MIDTRANS_SERVER_KEY,
 });
 
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
 // Test route
 app.get("/", (req, res) => {
   res.send("GatherHub Midtrans Backend is running!");
