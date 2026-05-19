@@ -9,56 +9,53 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Cek apakah Server Key tersedia
+if (!process.env.MIDTRANS_SERVER_KEY) {
+  console.error("MIDTRANS_SERVER_KEY is not set!");
+  process.exit(1);
+}
+
 const snap = new midtransClient.Snap({
   isProduction: false,
   serverKey: process.env.MIDTRANS_SERVER_KEY,
 });
 
+// Test route
+app.get("/", (req, res) => {
+  res.send("GatherHub Midtrans Backend is running!");
+});
+
+// Create transaction route
 app.post("/create-transaction", async (req, res) => {
   try {
     const { eventName, price } = req.body;
 
-    // Validasi data
-    if (!eventName) {
-      return res.status(400).json({
-        error: "eventName is required",
-      });
-    }
+    console.log("Request body:", req.body);
 
-    if (!process.env.MIDTRANS_SERVER_KEY) {
-      return res.status(500).json({
-        error: "MIDTRANS_SERVER_KEY is not set",
-      });
-    }
-
-    const orderId = "ORDER-" + Date.now();
-
-    // Pastikan harga berupa angka dan minimal 1000
     const amount = Math.max(Number(price) || 0, 1000);
 
     const parameter = {
       transaction_details: {
-        order_id: orderId,
+        order_id: "ORDER-" + Date.now(),
         gross_amount: amount,
       },
       item_details: [
         {
           id: "EVENT",
-          name: eventName,
+          name: eventName || "Event Ticket",
           price: amount,
           quantity: 1,
         },
       ],
     };
 
-    console.log("Creating transaction:", parameter);
+    console.log("Midtrans parameter:", parameter);
 
     const transaction = await snap.createTransaction(parameter);
 
     res.json({
       token: transaction.token,
       redirect_url: transaction.redirect_url,
-      order_id: orderId,
     });
   } catch (error) {
     console.error("Midtrans Error:", error);
@@ -70,12 +67,9 @@ app.post("/create-transaction", async (req, res) => {
   }
 });
 
+// Railway wajib pakai PORT dari environment
 const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => {
-  res.send("GatherHub Midtrans Backend is running!");
-});
-
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
